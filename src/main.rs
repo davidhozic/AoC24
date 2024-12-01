@@ -1,5 +1,7 @@
+mod utils;
 mod day1;
 
+use utils::*;
 
 
 fn main() {

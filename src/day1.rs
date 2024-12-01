@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::fs::read_to_string;
 
 
@@ -42,16 +41,10 @@ pub fn part_one() {
 /// list and the number of times it appears in the right list.
 pub fn part_two() {
     let (left_list, right_list) = parse_input();
-    
-    // Contains number counts from the right list
-    let mut counts: HashMap<usize, usize> = HashMap::new();
-    for num in right_list {
-        counts.insert(num, *counts.get(&num).unwrap_or(&0) + 1);
-    }
 
     let mut score: usize = 0;
     for num in left_list {
-        score += num * counts.get(&num).unwrap_or(&0);
+        score += num * right_list.iter().filter(|x| **x == num).count();
     }
 
     println!("Total score is {score}");
