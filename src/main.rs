@@ -10,5 +10,5 @@ use utils::*;
 
 fn main() {
     day5::part_one();
-    benchmark(day5::part_two, 1000);
+    day5::part_two();
 }
