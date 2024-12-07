@@ -43,8 +43,63 @@ pub fn part_one() {
 }
 
 
+/// Receives a list of operands and the expected result when correct operators are used.
+/// Then sums up the expected results of the cases that can be solved.
+/// Each operator permutation is tested. Since there are now three operators compared to [`part_one`] (+, *, ||),
+/// the permutations are being tracked in a vector.
 pub fn part_two() {
+    let expressions = parse_input();
+    let mut operators: Vec<usize>;
+    let mut expr_result: usize;
+    let mut valid_sum: usize = 0;
 
+    for (expected_result, operands) in expressions {
+        operators = vec![0; operands.len() - 1];  // Each bit represents the operator (0 == summation, 1 == multiplication)
+
+        loop {
+            expr_result = operands[0];
+            for shift in 1..operands.len() {
+                let op: usize = operators[shift - 1];
+                expr_result = match op {
+                    0 => expr_result + operands[shift],
+                    1 => expr_result * operands[shift],
+                    // Add N zeroes to the end of current value and add the new number, concatenating it.
+                    // Integer logarithm is used to get the number of digits the right number has.
+                    2 => expr_result * 10usize.pow(operands[shift].ilog10() + 1) + operands[shift],
+                    _ => unreachable!()
+                };
+            }
+
+            if expr_result == expected_result {  // The operators give the desired test value
+                valid_sum += expected_result;
+                break;
+            }
+
+
+            let mut pos: usize = 0;
+            // Go to next permutation (ternary numeric system add operation)
+            loop {
+                operators[pos] += 1;
+                if operators[pos] > 2 {
+                    operators[pos] = 0;
+                }
+                else {
+                    break;
+                }
+
+                pos += 1;
+                if pos == operators.len() {
+                    break;
+                }
+            }
+
+            if operators.iter().sum::<usize>() == 0 {  // Reached the end of expression permutations.
+                break;
+            }
+        }
+    }
+
+    println!("{valid_sum}");
 }
 
 
