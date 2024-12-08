@@ -16,3 +16,15 @@ pub fn benchmark<T>(func: fn () -> T, n_times: usize) -> T {
     println!("{}", sum as f64 / n_times as f64);
     return r_val.unwrap();
 }
+
+
+/// Prints characters of a 2D map to the console
+/// in a formatted way.
+pub fn print_map(map: &Vec<Vec<char>>) {
+    for l in map {
+        for c in l {
+            print!("{c}");
+        }
+        println!("");
+    }
+}
