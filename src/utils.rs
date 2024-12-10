@@ -20,11 +20,8 @@ pub fn benchmark<T>(func: fn () -> T, n_times: usize) -> T {
 
 /// Prints characters of a 2D map to the console
 /// in a formatted way.
-pub fn print_map(map: &Vec<Vec<char>>) {
+pub fn print_map<T: std::fmt::Debug>(map: &Vec<Vec<T>>) {
     for l in map {
-        for c in l {
-            print!("{c}");
-        }
-        println!("");
+        println!("{l:4?}");
     }
 }

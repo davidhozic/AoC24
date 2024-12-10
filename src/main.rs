@@ -7,12 +7,13 @@ mod utils;
 // mod day6;
 // mod day7;
 // mod day8;
-mod day9;
+// mod day9;
+mod day10;
 
 use utils::*;
 
 
 fn main() {
-    day9::part_one();
-    day9::part_two();
+    day10::part_one();
+    day10::part_two();
 }
