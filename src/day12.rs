@@ -42,6 +42,38 @@ fn find_perimeter(region: &HashSet<(usize, usize)>) -> usize {
     perimeter
 }
 
+fn find_sides(region: &HashSet<(usize, usize)>) -> usize {
+    let mut perimeter: usize = 0;
+    let region: HashSet<_> = region.iter().map(|(l, r)| (*l as isize, *r as isize)).collect();
+    let mut fence = HashSet::new();
+
+    for (y, x) in &region {
+        for &(y_diff, x_diff) in &[(-1, 0), (1, 0), (0, -1), (0, 1)] {
+            let fence_part = (y + y_diff, x + x_diff);
+            if !region.contains(&fence_part) {
+                fence.insert(fence_part);
+            }
+        }
+    }
+
+    for (y, x) in &fence {
+        let left = (*y, x - 1);
+        let right = (*y, x + 1);
+
+        if fence.contains(&left) && fence.contains(&right) {
+            continue;
+        }
+
+        let up = (y - 1, *x);
+        let down = (y + 1, *x);
+
+
+    }
+
+    perimeter
+}
+
+
 
 pub fn part_one() {
     let map: Vec<Vec<char>> = parse_input();
@@ -70,7 +102,31 @@ pub fn part_one() {
 
 
 pub fn part_two() {
+    let map: Vec<Vec<char>> = parse_input();
+    let mut regions = Vec::new();
+    let mut visited = HashSet::new();
 
+    let mut region;
+
+    // Iterate through the entire map and run region exploration from each index outward
+    // in all directions.
+    for y in 0..map.len() {
+        for x in 0..map[0].len() {
+            // Skip the positions that were already explored. We don't want duplicated regions.
+            if visited.contains(&(y, x)) {
+                continue;
+            }
+
+            region = find_region(y, x, &map);
+            visited = visited.union(&region).map(|x| *x).collect();
+            regions.push(region);
+        }
+    }
+
+    for region in &regions {
+        println!("{:?} {} {}", region, region.len(), find_sides(&region));
+    }
+    println!("{}", regions.into_iter().map(|region| region.len() * find_sides(&region)).sum::<usize>())
 }
 
 
