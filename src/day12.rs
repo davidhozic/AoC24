@@ -1,8 +1,5 @@
 use std::{collections::HashSet, fs::read_to_string};
-use crate::utils::{print_map, benchmark};
 
-
-const DIR: &[isize] = &[-1, 0, 1];
 
 fn find_region(y_start: usize, x_start: usize, map: &Vec<Vec<char>>) -> HashSet<(usize, usize)> {
     let search_char = map[y_start][x_start];
@@ -13,23 +10,17 @@ fn find_region(y_start: usize, x_start: usize, map: &Vec<Vec<char>>) -> HashSet<
         inserted = false;
 
         for (y, x) in points.clone() {
-            for y_diff in DIR {
-                // Outside of map
-                if *y_diff == -1 && y == 0 || *y_diff == 1 && y == map.len() - 1 {
+            for &(y_diff, x_diff) in &[(-1, 0), (1, 0), (0, -1), (0, 1)] {
+                // Outside of map                
+                let new_y = y as isize + y_diff;
+                let new_x = x as isize + x_diff;
+                if new_y < 0 || new_y as usize >= map.len() || new_x < 0 || new_x as usize >= map[0].len() {
                     continue;
                 }
-                
-                let new_y = (y as isize + *y_diff) as usize;
-                for x_diff in DIR {
-                    // Outside of map
-                    if *x_diff == -1 && x == 0 || *x_diff == 1 && x == map[0].len() - 1 {
-                        continue;
-                    }
-                    let new_x = (x as isize + *x_diff) as usize;
-                    if map[new_y][new_x] == search_char && !points.contains(&(new_y, new_x)){
-                        points.insert((new_y, new_x));
-                        inserted = true;
-                    }
+
+                if map[new_y as usize][new_x as usize] == search_char && !points.contains(&(new_y as usize, new_x as usize)){
+                    points.insert((new_y as usize, new_x as usize));
+                    inserted = true;
                 }
             }
         }
@@ -44,10 +35,8 @@ fn find_perimeter(region: &HashSet<(usize, usize)>) -> usize {
     let region: HashSet<_> = region.iter().map(|(l, r)| (*l as isize, *r as isize)).collect();
 
     for (y, x) in &region {
-        for y_diff in DIR.iter().map(|x| *x as isize) {
-            for x_diff in DIR.iter().map(|x| *x as isize) {
-                perimeter += region.contains(&(y + y_diff, x + x_diff)) as usize;
-            }    
+        for &(y_diff, x_diff) in &[(-1, 0), (1, 0), (0, -1), (0, 1)] {
+            perimeter += (!region.contains(&(y + y_diff, x + x_diff))) as usize;
         }
     }
     perimeter
@@ -75,8 +64,8 @@ pub fn part_one() {
             regions.push(region);
         }
     }
-    println!("{:?}", regions[0]);
-    println!("{}", find_perimeter(&regions[0]) )
+
+    println!("{}", regions.into_iter().map(|region| region.len() * find_perimeter(&region)).sum::<usize>())
 }
 
 
