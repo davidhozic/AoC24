@@ -43,27 +43,16 @@ fn find_perimeter(region: &HashSet<(usize, usize)>) -> usize {
 }
 
 fn find_sides(region: &HashSet<(usize, usize)>) -> usize {
-    let mut perimeter: usize = 0;
+    let mut perimeter = 0;
     let region: HashSet<_> = region.iter().map(|(l, r)| (*l as isize, *r as isize)).collect();
-    let mut fence = HashSet::new();
-
+    let mut edges = HashSet::new();
+    
     for (y, x) in &region {
-        for &(y_diff, x_diff) in &[(-1, 0), (1, 0), (0, -1), (0, 1), (1, 1), (1, -1), (-1, -1), (-1, 1)] {
-            let fence_part = (y + y_diff, x + x_diff);
-            if !region.contains(&fence_part) {
-                fence.insert(fence_part);
+        for &(y_diff, x_diff) in &[(-1, 0), (1, 0), (0, -1), (0, 1)] {
+            let e = (y + y_diff, x + x_diff);
+            if !region.contains(&(y + y_diff, x + x_diff)) {
+                edges.insert(e);
             }
-        }
-    }
-
-    for (y, x) in &fence {
-        let left = (*y, x - 1);
-        let right = (*y, x + 1);
-        let up = (y - 1, *x);
-        let down = (y + 1, *x);
-
-        if (fence.contains(&left) || fence.contains(&right)) && (fence.contains(&up) || fence.contains(&down)) {
-            perimeter += 1;
         }
     }
 
