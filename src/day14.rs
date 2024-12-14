@@ -55,14 +55,15 @@ pub fn part_two() {
 
         let mut map_new = [['.'; COLUMNS as usize]; ROWS as usize];
         let mut to_print = false;
+        const REGION_SIZE: usize = 10;
         // Create a new map with '#' where the individual element is 
         // part of a larget cluster.
-        // Here we take a window of 5x5 from each element and then check if the number of robots
+        // Here we take a window of REGION_SIZExREGION_SIZE from each element and then check if the number of robots
         // in this cluster is larger than 10; this way we eliminate useless robots
         // that make it hard to see any real patterns.
-        for r in 0..map.len() - 10 {
-            for c in 0..map[0].len() - 10 {
-                if map[r..r+5].iter().map(|row| row[c..c+5].iter().sum::<usize>()).sum::<usize>() > 10 {
+        for r in 0..map.len() - REGION_SIZE {
+            for c in 0..map[0].len() - REGION_SIZE {
+                if map[r..r+REGION_SIZE].iter().map(|row| row[c..c+REGION_SIZE].iter().sum::<usize>()).sum::<usize>() > REGION_SIZE * REGION_SIZE / 2 {
                     map_new[r][c] = '#';
                     to_print = true;
                 }
@@ -70,15 +71,18 @@ pub fn part_two() {
         }
 
         // Print the new map if any larger clusters were found.
-        // The answer is then obtained through (human) visual inspection.
+        // This is our tree
         if to_print {
             file.write_all("---------------\n".as_bytes()).unwrap();
-            for line in map_new {
+            for line in map {
+                let line = line.map(|x| if x == 0 {' '} else {'#'});
                 file.write_all(format!("{line:3?}\n").as_bytes()).unwrap();
             }
 
-            // Print the index. The number of seconds that elapsed is i + 1 (for the puzzle answer).
-            file.write_all(format!("=============\n{i}\n=============\n").as_bytes()).unwrap();
+            // Print the number of iterations (puzzle answer);
+            file.write_all(format!("=============\n{}\n=============\n", i + 1).as_bytes()).unwrap();
+            println!("Num seconds for tree: {}", i + 1);
+            break;
         }
     }
 }
