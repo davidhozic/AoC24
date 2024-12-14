@@ -61,8 +61,8 @@ pub fn part_two() {
         // Here we take a window of REGION_SIZExREGION_SIZE from each element and then check if the number of robots
         // in this cluster is larger than 10; this way we eliminate useless robots
         // that make it hard to see any real patterns.
-        for r in 0..map.len() - REGION_SIZE {
-            for c in 0..map[0].len() - REGION_SIZE {
+        for r in (0..map.len() - REGION_SIZE).step_by(REGION_SIZE) {
+            for c in (0..map[0].len() - REGION_SIZE).step_by(REGION_SIZE) {
                 if map[r..r+REGION_SIZE].iter().map(|row| row[c..c+REGION_SIZE].iter().sum::<usize>()).sum::<usize>() > REGION_SIZE * REGION_SIZE / 2 {
                     map_new[r][c] = '#';
                     to_print = true;
