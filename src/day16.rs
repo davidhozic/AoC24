@@ -25,12 +25,65 @@ pub fn parse_input() {
         (1, map[0].len() - 2)
     );
 
-    for (y, x) in &path {
-        map[*y][*x] = 'X';
+    let mut dir = Direction::EAST;
+    let mut last_y = path[0].0;
+    let mut last_x = path[0].1;
+    let mut score_c = 0;
+    for (y, x) in &path[1..] {
+        match dir {
+            Direction::EAST => {
+                if *x != last_x + 1 {
+                    if *y == last_y + 1 {
+                        dir = Direction::SOUTH;
+                    }                    
+                    else {
+                        dir = Direction::NORTH;
+                    }
+                    score_c += 1000;
+                }
+            },
+            Direction::WEST => {
+                if *x != last_x - 1 {
+                    if *y == last_y + 1 {
+                        dir = Direction::SOUTH;
+                    }                    
+                    else {
+                        dir = Direction::NORTH;
+                    }
+                    score_c += 1000;
+                }
+            },
+            Direction::SOUTH => {
+                if *y != last_y + 1 {
+                    if *x == last_x + 1 {
+                        dir = Direction::EAST;
+                    }                    
+                    else {
+                        dir = Direction::WEST;
+                    }
+                    score_c += 1000;
+                }
+            },
+            Direction::NORTH => {
+                if *y != last_y - 1 {
+                    if *x == last_x + 1 {
+                        dir = Direction::EAST;
+                    }                    
+                    else {
+                        dir = Direction::WEST;
+                    }
+                    score_c += 1000;
+                }
+            },
+        }
+
+        last_x = *x;
+        last_y = *y;
+        score_c += 1;
     }
 
     print_map(&map);
-    println!("{score} {}", path.len());
+    println!("{score} {score_c} {}", path.len());
 }
 
 
@@ -103,6 +156,10 @@ fn graph_from_map(map: &Vec<Vec<char>>) -> HashMap<(usize, usize), Vec<(usize, u
         // Check neigbors
         let mut new_positions = Vec::new();
         for (y, x, direction) in &positions {
+            if visited.contains(&(*y, *x, *direction)) {
+                continue;
+            }
+
             for new_direction in Direction::iter() {
                 let (yn, xn) = match new_direction {
                     Direction::NORTH => (*y - 1, *x),
@@ -111,17 +168,25 @@ fn graph_from_map(map: &Vec<Vec<char>>) -> HashMap<(usize, usize), Vec<(usize, u
                     Direction::EAST => (*y, *x + 1),
                 };
 
-                let delta_direction = (new_direction as usize).abs_diff(*direction as usize) % 2;
-                if map[yn][xn] == '#' || visited.contains(&(yn, xn, new_direction)) {  // Reached a wall || Already visisted
+                let delta_direction = match direction {
+                    Direction::NORTH if new_direction == Direction::SOUTH => continue,
+                    Direction::SOUTH if new_direction == Direction::NORTH => continue,
+                    Direction::EAST if new_direction == Direction::WEST => continue,
+                    Direction::WEST if new_direction == Direction::EAST => continue,
+                    _ if *direction != new_direction => 1000,
+                    _  => 0,
+                };
+                
+                if map[yn][xn] == '#' {  // Reached a wall || Already visisted
                     continue;
                 }
 
-                visited.insert((yn, xn, new_direction));
-                let edge_cost = delta_direction * 1000 + 1;  // Rotation = 1000 points, move = 1 point
+                let edge_cost = delta_direction + 1;  // Rotation = 1000 points, move = 1 point
                 new_positions.push((yn, xn, new_direction));
                 let edge_list = nodes.entry((*y, *x)).or_insert(Vec::new());
                 edge_list.push((yn, xn, edge_cost));
             }
+            visited.insert((*y, *x, *direction));
         }
         positions = new_positions;
     }
@@ -133,7 +198,7 @@ fn graph_from_map(map: &Vec<Vec<char>>) -> HashMap<(usize, usize), Vec<(usize, u
 #[derive(Debug, EnumIter, PartialEq, Clone, Copy, Eq, Hash)]
 enum Direction {
     NORTH = 0,
-    WEST,
-    SOUTH,
-    EAST
+    WEST = 1,
+    SOUTH = 2,
+    EAST = 3
 }
