@@ -21,7 +21,7 @@ pub fn parse_input() {
     let graph = graph_from_map(&map);
     let (path, score) = get_shortest_path(
         &graph,
-        (map.len() - 2, 1usize),
+        (map.len() - 2, 1usize, Direction::EAST),
         (1, map[0].len() - 2)
     );
 
@@ -89,17 +89,17 @@ pub fn parse_input() {
 
 /// Finds the best path using Dijkstra's algorithm. Returns the path and the score using this path.
 fn get_shortest_path(
-    graph: &HashMap<(usize, usize), Vec<(usize, usize, usize)>>,
-    start_node: (usize, usize),
+    graph: &HashMap<(usize, usize, Direction), Vec<(usize, usize, Direction, usize)>>,
+    start_node: (usize, usize, Direction),
     goal_node: (usize, usize)
 ) -> (Vec<(usize, usize)>, usize) {
     let mut ol = HashMap::new();
     let mut cl = HashMap::new();
-    ol.insert(start_node, (0, (0, 0)));
+    ol.insert(start_node, (0, (0, 0, Direction::EAST)));
     while !ol.is_empty() {
         // Select current best
         let (node, (cost, parent)) = {  // Gotta love Rust's lifetimes :)
-            let n: (&(usize, usize), &(usize, (usize, usize))) = ol.iter().min_by_key(|(_, v)| v.0).unwrap();
+            let n: (&(usize, usize, Direction), &(usize, (usize, usize, Direction))) = ol.iter().min_by_key(|(_, v)| v.0).unwrap();
             (*n.0, *n.1)
         };
 
@@ -108,45 +108,48 @@ fn get_shortest_path(
         //     panic!("{node:?}");
         // }
 
-        for (ny, nx, edge_price) in graph.get(&node).unwrap_or(&Vec::with_capacity(0)) {
-            if cl.contains_key(&(*ny, *nx)) {
+        for (ny, nx, direction, edge_price) in graph.get(&node).unwrap_or(&Vec::with_capacity(0)) {
+            if cl.contains_key(&(*ny, *nx, *direction)) {
                 continue;
             }
 
             // Add to open list if the new cost is better
             let new_cost = edge_price + cost;
-            if let Some((neighbor_cost, _)) = ol.get(&(*ny, *nx)) {
+            if let Some((neighbor_cost, _)) = ol.get(&(*ny, *nx, *direction)) {
                 if new_cost < *neighbor_cost {
-                    ol.insert((*ny, *nx), (new_cost, node));    
+                    ol.insert((*ny, *nx, *direction), (new_cost, node));    
                 }
             }
             else {
-                ol.insert((*ny, *nx), (new_cost, node));
+                ol.insert((*ny, *nx, *direction), (new_cost, node));
             }
         }
 
         cl.insert(node, (cost, parent));
         ol.remove(&node);
-        if node == goal_node {  // Found best path to the end
-            break;
-        }
+        // if node == goal_node {  // Found best path to the end
+        //     break;
+        // }
     }
 
 
     // Create the path
     let mut path = vec![goal_node];
-    let (best_cost, mut parent) = cl[&goal_node];
+    let start = cl.iter().filter(|(k, _)| (k.0, k.1) == goal_node)
+        .min_by_key(|(_, v)| v.0).unwrap().1;
+
+    let (best_cost, mut parent) = start;
     while parent != start_node {
-        path.push(parent);
+        path.push((parent.0, parent.1));
         parent = cl[&parent].1
     }
 
-    path.push(start_node);
-    (path.iter().rev().map(|x| *x).collect(), best_cost)
+    path.push((start_node.0, start_node.1));
+    (path.iter().rev().map(|x| *x).collect(), *best_cost)
 }
 
 
-fn graph_from_map(map: &Vec<Vec<char>>) -> HashMap<(usize, usize), Vec<(usize, usize, usize)>> {
+fn graph_from_map(map: &Vec<Vec<char>>) -> HashMap<(usize, usize, Direction), Vec<(usize, usize, Direction, usize)>> {
     let mut positions= vec![(map.len() - 2, 1usize, Direction::EAST)];  // Tracks current position in the graph
     let mut nodes = HashMap::new();
 
@@ -183,8 +186,8 @@ fn graph_from_map(map: &Vec<Vec<char>>) -> HashMap<(usize, usize), Vec<(usize, u
 
                 let edge_cost = delta_direction + 1;  // Rotation = 1000 points, move = 1 point
                 new_positions.push((yn, xn, new_direction));
-                let edge_list = nodes.entry((*y, *x)).or_insert(Vec::new());
-                edge_list.push((yn, xn, edge_cost));
+                let edge_list = nodes.entry((*y, *x, *direction)).or_insert(Vec::new());
+                edge_list.push((yn, xn, new_direction, edge_cost));
             }
             visited.insert((*y, *x, *direction));
         }
