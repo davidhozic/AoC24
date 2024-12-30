@@ -78,7 +78,19 @@ pub fn part_one() {
 
 
 pub fn part_two() {
+    let mut map = parse_input();
+    let graph = graph_from_map(&map);
+    let nodes = get_shortest_paths_nodes(
+        &graph,
+        (map.len() - 2, 1usize, Direction::EAST),
+        (1, map[0].len() - 2)
+    );
 
+    for node in &nodes {
+        map[node.0][node.1] = 'O';
+    }
+    // print_map(&map);
+    println!("{}", nodes.len());
 }
 
 pub fn parse_input() -> Vec<Vec<char>> {
@@ -148,6 +160,80 @@ fn get_shortest_path(
     path.push((start_node.0, start_node.1));
     (path.iter().rev().map(|x| *x).collect(), *best_cost)
 }
+
+
+/// Returns all the nodes that are part of any of the best paths.
+fn get_shortest_paths_nodes(
+    graph: &HashMap<(usize, usize, Direction), Vec<(usize, usize, Direction, usize)>>,
+    start_node: (usize, usize, Direction),
+    goal_node: (usize, usize)
+) -> HashSet<(usize, usize)> {
+    let mut ol = HashMap::new();
+    let mut cl = HashMap::new();
+    ol.insert(start_node, (0, vec![(0, 0, Direction::EAST)]));
+    while !ol.is_empty() {
+        // Select current best
+        let (node, (cost, nparents)) = {  // Gotta love Rust's lifetimes :)
+            let n: (&(usize, usize, Direction), &(usize, Vec<(usize, usize, Direction)>)) = ol.iter().min_by_key(|(_, v)| v.0).unwrap();
+            (*n.0, n.1.clone())
+        };
+
+        // Update neigbors
+        // if let None = graph.get(&node) {
+        //     panic!("{node:?}");
+        // }
+
+        for (ny, nx, direction, edge_price) in graph.get(&node).unwrap_or(&Vec::with_capacity(0)) {
+            if cl.contains_key(&(*ny, *nx, *direction)) {
+                continue;
+            }
+
+            // Add to open list if the new cost is better
+            let new_cost = edge_price + cost;
+            if let Some((neighbor_cost, parents)) = ol.get_mut(&(*ny, *nx, *direction)) {
+                if new_cost < *neighbor_cost {
+                    ol.insert((*ny, *nx, *direction), (new_cost, vec![node]));
+                }
+                else if new_cost == *neighbor_cost {
+                    parents.push(node);
+                }
+            }
+            else {
+                ol.insert((*ny, *nx, *direction), (new_cost, vec![node]));
+            }
+        }
+
+        cl.insert(node, (cost, nparents));
+        ol.remove(&node);
+        // if node == goal_node {  // Found best path to the end
+        //     break;
+        // }
+    }
+
+
+    // Create the path
+    let start = cl.iter().filter(|(k, _)| (k.0, k.1) == goal_node)
+        .min_by_key(|(_, v)| v.0).unwrap().1;
+
+    let (_, mut parents) = start.clone();
+
+    let mut nodes = HashSet::new();
+    while parents.len() > 0 {
+        let parent = parents[0];
+        parents.remove(0);
+        nodes.insert((parent.0, parent.1));
+
+        if parent != start_node {
+            parents.extend(&cl[&parent].1);
+        }
+    }
+    nodes.insert(goal_node);
+
+    // path.push((start_node.0, start_node.1));
+    // (path.iter().rev().map(|x| *x).collect(), *best_cost)
+    nodes
+}
+
 
 
 fn graph_from_map(map: &Vec<Vec<char>>) -> HashMap<(usize, usize, Direction), Vec<(usize, usize, Direction, usize)>> {
