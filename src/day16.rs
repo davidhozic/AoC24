@@ -7,17 +7,7 @@ use crate::print_map;
 
 
 pub fn part_one() {
-    parse_input();
-}
-
-
-pub fn part_two() {
-
-}
-
-pub fn parse_input() {
-    let input: String = read_to_string("./inputs/day16.txt").unwrap();
-    let mut map: Vec<Vec<_>> = input.lines().map(|line| line.chars().collect()).collect();
+    let map = parse_input();
     let graph = graph_from_map(&map);
     let (path, score) = get_shortest_path(
         &graph,
@@ -84,6 +74,17 @@ pub fn parse_input() {
 
     print_map(&map);
     println!("{score} {score_c} {}", path.len());
+}
+
+
+pub fn part_two() {
+
+}
+
+pub fn parse_input() -> Vec<Vec<char>> {
+    let input: String = read_to_string("./inputs/day16.txt").unwrap();
+    let map: Vec<Vec<_>> = input.lines().map(|line| line.chars().collect()).collect();
+    map
 }
 
 
